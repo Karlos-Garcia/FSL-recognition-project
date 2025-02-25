@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 2px solid black;
+        }
+
+        #outputCanvas {
+            width: 640px;
+            height: 480px;
+        }
+
+        #capturedCanvas {
+            width: 200px;
+            height: 200px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sign Language Recognition</h1>
+
+    <div class="canvas-container">
+        <!-- Left Side: Video Feed with Landmarks -->
+        <canvas id="outputCanvas" width="640" height="480"></canvas>
+
+        <!-- Right Side: Captured Image-->
+        <canvas id="capturedCanvas" width="200" height="200"></canvas>
+    </div>
+
+    <div class="button-container">
+        <button onclick="captureHand()">Capture</button>
+        <button onclick="document.getElementById('fileInput').click()">Import Image</button>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="importImage(event)">
+        <button onclick="clearOutput()">Clear</button>
+        <button onclick="predict()">Predict</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+
+    <script>
+        const canvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d');
+        const capturedCanvas = document.getElementById('capturedCanvas');
+        const capturedCtx = capturedCanvas.getContext('2d');
+
+        const video = document.createElement('video');  
+        video.setAttribute("autoplay", "");
+        video.setAttribute("playsinline", "");
+
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        let lastHandBox = null;
+
+        hands.onResults((results) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+
+                //landmarks
+                drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
+                drawLandmarks(ctx, landmarks, { color: '#FF0000', lineWidth: 2 });
+
+                //bounding box
+                const xVals = landmarks.map(p => p.x * canvas.width);
+                const yVals = landmarks.map(p => p.y * canvas.height);
+                const minX = Math.min(...xVals);
+                const minY = Math.min(...yVals);
+                const maxX = Math.max(...xVals);
+                const maxY = Math.max(...yVals);
+
+                // Square Bounding Box
+                const width = maxX - minX;
+                const height = maxY - minY;
+                const squareSize = Math.max(width, height) + 20; // Add padding
+
+                // Center square region for bounding
+                const centerX = (minX + maxX) / 2;
+                const centerY = (minY + maxY) / 2;
+
+                lastHandBox = {
+                    x: Math.max(0, centerX - squareSize / 2),
+                    y: Math.max(0, centerY - squareSize / 2),
+                    size: Math.min(canvas.width, canvas.height, squareSize)
+                };
+
+                ctx.strokeStyle = "blue";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(lastHandBox.x, lastHandBox.y, lastHandBox.size, lastHandBox.size);
+            }
+        });
+
+        async function startCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+
+            const camera = new Camera(video, {
+                onFrame: async () => {
+                    await hands.send({ image: video });
+                },
+                width: 640,
+                height: 480
+            });
+
+            camera.start();
+        }
+
+        function captureHand() {
+            if (!lastHandBox) return;
+
+            // Extract hand region
+            const squareSize = lastHandBox.size;
+            const sourceX = Math.max(0, lastHandBox.x);
+            const sourceY = Math.max(0, lastHandBox.y);
+
+            // Clear
+            capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+
+            // Calculate the scaling factor to fit the image
+            const scale = Math.min(
+                capturedCanvas.width / squareSize,
+                capturedCanvas.height / squareSize
+            );
+
+            // Calculate the new dimensions for the captured image
+            const newWidth = squareSize * scale;
+            const newHeight = squareSize * scale;
+
+            // Center the image on the captured canvas
+            const offsetX = (capturedCanvas.width - newWidth) / 2;
+            const offsetY = (capturedCanvas.height - newHeight) / 2;
+
+            // Draw the square region onto the captured canvas
+            capturedCtx.drawImage(
+                canvas,
+                sourceX, sourceY, squareSize, squareSize,
+                offsetX, offsetY, newWidth, newHeight   
+            );
+        }
+
+        /** Import an image from file and display it on capturedCanvas */
+        function importImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+                        const scale = Math.min(capturedCanvas.width / img.width, capturedCanvas.height / img.height);
+                        const newWidth = img.width * scale;
+                        const newHeight = img.height * scale;
+                        const offsetX = (capturedCanvas.width - newWidth) / 2;
+                        const offsetY = (capturedCanvas.height - newHeight) / 2;
+                        capturedCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        /** Clear the captured canvas */
+        function clearOutput() {
+            capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+        }
+
+        /** Placeholder for prediction functionality */
+        function predict() {
+            alert("Prediction functionality to be implemented.");
+        }
+
+        startCamera();
+    </script>
+</body>
+</html>
