@@ -147,33 +147,26 @@
         function captureHand() {
             if (!lastHandBox) return;
 
-            // Extract hand region
             const squareSize = lastHandBox.size;
             const sourceX = Math.max(0, lastHandBox.x);
             const sourceY = Math.max(0, lastHandBox.y);
 
-            // Clear
             capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
 
-            // Calculate the scaling factor to fit the image
             const scale = Math.min(
                 capturedCanvas.width / squareSize,
                 capturedCanvas.height / squareSize
             );
-
-            // Calculate the new dimensions for the captured image
             const newWidth = squareSize * scale;
             const newHeight = squareSize * scale;
-
-            // Center the image on the captured canvas
             const offsetX = (capturedCanvas.width - newWidth) / 2;
             const offsetY = (capturedCanvas.height - newHeight) / 2;
 
-            // Draw the square region onto the captured canvas
+            // Draw from the video element instead of the canvas
             capturedCtx.drawImage(
-                canvas,
+                video, // Changed from 'canvas' to 'video'
                 sourceX, sourceY, squareSize, squareSize,
-                offsetX, offsetY, newWidth, newHeight   
+                offsetX, offsetY, newWidth, newHeight
             );
         }
 
