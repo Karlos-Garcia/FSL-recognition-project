@@ -19,11 +19,12 @@
 
     <div class="button-container">
         <button onclick="captureHand()">Capture</button>
-        <button onclick="document.getElementById('fileInput').click()">Import Image</button>
-        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="importImage(event)">
+        <!-- <button onclick="document.getElementById('fileInput').click()">Import Image</button> -->
+        <!-- <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="importImage(event)"> -->
         <button onclick="clearOutput()">Clear</button>
-        <button onclick="predict()">Predict</button>
+        <!-- <button onclick="predict()">Predict</button> -->
         <button onclick="downloadImage()">Download</button> <!-- New Download Button -->
+        <button onclick="captureAndDownload()">Capture & Download</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
@@ -183,6 +184,11 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function captureAndDownload() {
+            captureHand();
+            downloadImage();
         }
 
         startCamera();
