@@ -14,7 +14,7 @@
         <canvas id="outputCanvas" width="640" height="480"></canvas>
 
         <!-- Right Side: Captured Image-->
-        <canvas id="capturedCanvas" width="200" height="200"></canvas>
+        <canvas id="capturedCanvas" width="224" height="224"></canvas>
     </div>
 
     <div class="button-container">
@@ -22,9 +22,10 @@
         <!-- <button onclick="document.getElementById('fileInput').click()">Import Image</button> -->
         <!-- <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="importImage(event)"> -->
         <button onclick="clearOutput()">Clear</button>
-        <!-- <button onclick="predict()">Predict</button> -->
+        <button onclick="predict()">Predict</button>
         <button onclick="downloadImage()">Download</button> <!-- New Download Button -->
         <button onclick="captureAndDownload()">Capture & Download</button>
+        <button onclick="downloadNormalizedData()">Download Normalized Data</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
@@ -164,7 +165,39 @@
 
         /** Placeholder for prediction functionality */
         function predict() {
-            alert("Prediction functionality to be implemented.");
+            // Check if capturedCanvas has an image
+            const capturedImageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
+            const isEmpty = Array.from(capturedImageData.data).every(value => value === 0);
+            if (isEmpty) {
+                alert("Please capture an image first.");
+                return;
+            }
+
+            // Create a temporary canvas for resizing
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 224;
+            tempCanvas.height = 224;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Draw the captured image onto the temporary canvas, resizing to 224x224
+            tempCtx.drawImage(capturedCanvas, 0, 0, 224, 224);
+
+            // Get the resized image data
+            const resizedImageData = tempCtx.getImageData(0, 0, 224, 224);
+            const data = resizedImageData.data;
+
+            // Normalize the image data to [0,1] (RGB only, ignoring alpha)
+            const normalizedData = new Float32Array(224 * 224 * 3);
+            let idx = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                normalizedData[idx++] = data[i] / 255;     // Red
+                normalizedData[idx++] = data[i + 1] / 255; // Green
+                normalizedData[idx++] = data[i + 2] / 255; // Blue
+            }
+
+            // Log the result and notify the user
+            console.log("Normalized image data:", normalizedData);
+            alert("Image resized to 224x224 and normalized to [0,1]. Ready for prediction.");
         }
 
         /** Download the captured image */
@@ -190,6 +223,38 @@
             captureHand();
             downloadImage();
         }
+
+        function downloadNormalizedData() {
+            // Assuming 'capturedCtx' is your canvas context
+            const imageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
+            const data = imageData.data;
+
+            // Check if the canvas has content
+            const isEmpty = Array.from(data).every(value => value === 0);
+            if (isEmpty) {
+                alert("No image to download. Please capture an image first.");
+                return;
+            }
+
+            // Normalize RGB values to [0,1]
+            const normalizedData = [];
+            for (let i = 0; i < data.length; i += 4) {
+                normalizedData.push(data[i] / 255);     // Red
+                normalizedData.push(data[i + 1] / 255); // Green
+                normalizedData.push(data[i + 2] / 255); // Blue
+                // Alpha channel is ignored
+            }
+
+            // Create a CSV string
+            const csvContent = normalizedData.join(',');
+
+            // Create a downloadable file
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'normalized_data.csv';
+            link.click();
+}
 
         startCamera();
     </script>
