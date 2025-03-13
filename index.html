@@ -256,6 +256,12 @@
             link.click();
 }
 
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "Space") {
+                captureAndDownload();
+            }
+        });
+
         startCamera();
     </script>
 </body>
