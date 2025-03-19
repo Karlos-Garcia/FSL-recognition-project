@@ -160,8 +160,7 @@
             capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
         }
 
-        /** Placeholder for prediction functionality */
-        function predict() {
+        async function predict() {
             // Check if capturedCanvas has an image
             const capturedImageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
             const isEmpty = Array.from(capturedImageData.data).every(value => value === 0);
@@ -179,22 +178,29 @@
             // Draw the captured image onto the temporary canvas, resizing to 224x224
             tempCtx.drawImage(capturedCanvas, 0, 0, 224, 224);
 
-            // Get the resized image data
-            const resizedImageData = tempCtx.getImageData(0, 0, 224, 224);
-            const data = resizedImageData.data;
+            // Get the image data as a base64 string
+            const imageData = tempCanvas.toDataURL('image/jpeg');
 
-            // Normalize the image data to [0,1] (RGB only, ignoring alpha)
-            const normalizedData = new Float32Array(224 * 224 * 3);
-            let idx = 0;
-            for (let i = 0; i < data.length; i += 4) {
-                normalizedData[idx++] = data[i] / 255;     // Red
-                normalizedData[idx++] = data[i + 1] / 255; // Green
-                normalizedData[idx++] = data[i + 2] / 255; // Blue
+            // Send the image to the backend
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Prediction failed');
+                }
+
+                const data = await response.json();
+                alert(`Predicted class: ${data.predicted_class}`);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Prediction failed. Please try again.');
             }
-
-            // Log the result and notify the user
-            console.log("Normalized image data:", normalizedData);
-            alert("Image resized to 224x224 and normalized to [0,1]. Ready for prediction.");
         }
 
         startCamera();
