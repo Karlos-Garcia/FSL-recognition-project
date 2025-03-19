@@ -19,13 +19,10 @@
 
     <div class="button-container">
         <button onclick="captureHand()">Capture</button>
-        <!-- <button onclick="document.getElementById('fileInput').click()">Import Image</button> -->
-        <!-- <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="importImage(event)"> -->
+        <button onclick="document.getElementById('fileInput').click()">Import Image</button>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="importImage(event)">
         <button onclick="clearOutput()">Clear</button>
         <button onclick="predict()">Predict</button>
-        <button onclick="downloadImage()">Download</button> <!-- New Download Button -->
-        <button onclick="captureAndDownload()">Capture & Download</button>
-        <button onclick="downloadNormalizedData()">Download Normalized Data</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
@@ -77,7 +74,7 @@
                 // Square Bounding Box
                 const width = maxX - minX;
                 const height = maxY - minY;
-                const squareSize = Math.max(width, height) + 20; // Add padding
+                const squareSize = Math.max(width, height) + 35; // Add padding
 
                 // Center square region for bounding
                 const centerX = (minX + maxX) / 2;
@@ -199,68 +196,6 @@
             console.log("Normalized image data:", normalizedData);
             alert("Image resized to 224x224 and normalized to [0,1]. Ready for prediction.");
         }
-
-        /** Download the captured image */
-        function downloadImage() {
-            const imageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
-            const isEmpty = imageData.data.every(value => value === 0);
-            
-            if (isEmpty) {
-                alert("Nothing to download. Please capture an image first.");
-                return;
-            }
-
-            // Create a download link
-            const link = document.createElement('a');
-            link.download = 'captured-hand-sign.png';
-            link.href = capturedCanvas.toDataURL('image/png');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function captureAndDownload() {
-            captureHand();
-            downloadImage();
-        }
-
-        function downloadNormalizedData() {
-            // Assuming 'capturedCtx' is your canvas context
-            const imageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
-            const data = imageData.data;
-
-            // Check if the canvas has content
-            const isEmpty = Array.from(data).every(value => value === 0);
-            if (isEmpty) {
-                alert("No image to download. Please capture an image first.");
-                return;
-            }
-
-            // Normalize RGB values to [0,1]
-            const normalizedData = [];
-            for (let i = 0; i < data.length; i += 4) {
-                normalizedData.push(data[i] / 255);     // Red
-                normalizedData.push(data[i + 1] / 255); // Green
-                normalizedData.push(data[i + 2] / 255); // Blue
-                // Alpha channel is ignored
-            }
-
-            // Create a CSV string
-            const csvContent = normalizedData.join(',');
-
-            // Create a downloadable file
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'normalized_data.csv';
-            link.click();
-}
-
-        document.addEventListener("keydown", function(event) {
-            if (event.code === "Space") {
-                captureAndDownload();
-            }
-        });
 
         startCamera();
     </script>
