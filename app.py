@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 # Load the Vision Transformer model and its state dictionary
 #change the num labels later
-model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224', num_labels=3, ignore_mismatched_sizes=True)
+model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224', num_labels=33, ignore_mismatched_sizes=True)
 model.load_state_dict(torch.load('model.pth', map_location=torch.device('cpu')))
 model.eval()
 
@@ -21,13 +21,12 @@ print(model.classifier.bias.shape)    # Should output torch.Size([3])
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+#   transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-# Define class names for sign language (26 letters + 10 digits)
-#class_names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-
-class_names = ['A','B','C']
+# Define class names for sign language (23 letters + 10 digits)
+class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'X', 'Y', 'Z']
 
 # Prediction endpoint
 @app.route('/predict', methods=['POST'])
