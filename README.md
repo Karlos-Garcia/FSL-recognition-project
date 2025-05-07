@@ -2,8 +2,14 @@
 
 #flask, pytorch, torchvision, hugging face transformers library, and pillow(image processing)
 
-cd folderName to navigate
-open a terminal and navigate to your project folder, and run:
+Check if python is installed
+1. open terminal
+2. python --version
+
+if python version exists
+
+Change directory to the system folder using: cd folderName 
+and run this command to install python libraries:
 pip install flask torch torchvision transformers pillow
 
 to run the flask server, in the terminal, from your project folder, run:
