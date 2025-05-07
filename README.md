@@ -17,7 +17,7 @@ and run this command to install python libraries:
 pip install flask torch torchvision transformers pillow
 
 Step 4: 
-install the Trained Vision Transformer on this link and put the file in the same folder: https://drive.google.com/drive/folders/121lQe6nYObtFiehlFxG27HDYRw7iBY0O?usp=sharing
+install the Trained Vision Transformer on this link and put the file in the same folder: https://drive.google.com/file/d/1N0PCVpa8xe5nxDUEdTXd4JfWuyWjRHky/view?usp=sharing
 
 Step 5:
 to run the flask server, in the terminal, from your project folder, run:
