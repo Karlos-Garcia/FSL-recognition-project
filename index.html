@@ -13,7 +13,7 @@
         <!-- Left Side: Video Feed with Landmarks -->
         <canvas id="outputCanvas" width="640" height="480"></canvas>
 
-        <!-- Right Side: Captured Image-->
+        <!-- Right Side: Captured Image -->
         <canvas id="capturedCanvas" width="224" height="224"></canvas>
     </div>
 
@@ -52,18 +52,19 @@
 
         let lastHandBox = null;
 
-        hands.onResults((results) => {
+        // Default onResults handler for video stream
+        const defaultOnResults = (results) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
 
-                //landmarks
+                // Draw landmarks
                 drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
                 drawLandmarks(ctx, landmarks, { color: '#FF0000', lineWidth: 2 });
 
-                //bounding box
+                // Calculate bounding box
                 const xVals = landmarks.map(p => p.x * canvas.width);
                 const yVals = landmarks.map(p => p.y * canvas.height);
                 const minX = Math.min(...xVals);
@@ -71,12 +72,12 @@
                 const maxX = Math.max(...xVals);
                 const maxY = Math.max(...yVals);
 
-                // Square Bounding Box
+                // Square bounding box
                 const width = maxX - minX;
                 const height = maxY - minY;
                 const squareSize = Math.max(width, height) + 35; // Add padding
 
-                // Center square region for bounding
+                // Center square region
                 const centerX = (minX + maxX) / 2;
                 const centerY = (minY + maxY) / 2;
 
@@ -90,25 +91,29 @@
                 ctx.lineWidth = 3;
                 ctx.strokeRect(lastHandBox.x, lastHandBox.y, lastHandBox.size, lastHandBox.size);
             }
-        });
+        };
+
+        hands.onResults(defaultOnResults);
 
         async function startCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
 
-            const camera = new Camera(video, {
-                onFrame: async () => {
-                    await hands.send({ image: video });
-                },
-                width: 640,
-                height: 480
-            });
+                const camera = new Camera(video, {
+                    onFrame: async () => {
+                        await hands.send({ image: video });
+                    },
+                    width: 640,
+                    height: 480
+                });
 
-            camera.start();
+                camera.start();
+            
         }
 
         function captureHand() {
             if (!lastHandBox) return;
+
 
             const squareSize = lastHandBox.size;
             const sourceX = Math.max(0, lastHandBox.x);
@@ -125,63 +130,124 @@
             const offsetX = (capturedCanvas.width - newWidth) / 2;
             const offsetY = (capturedCanvas.height - newHeight) / 2;
 
-            // Draw from the video element instead of the canvas
             capturedCtx.drawImage(
-                video, // Changed from 'canvas' to 'video'
+                video,
                 sourceX, sourceY, squareSize, squareSize,
                 offsetX, offsetY, newWidth, newHeight
             );
         }
 
-        /** Import an image from file and display it on capturedCanvas */
-        function importImage(event) {
+        async function importImage(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const img = new Image();
+                img.onload = async function() {
+                    // Create a temporary canvas to process the image
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = img.width;
+                    tempCanvas.height = img.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(img, 0, 0, img.width, img.height);
+
+                    // Create a promise to handle the hand detection results
+                    const detectHands = new Promise((resolve) => {
+                        // Temporarily override the onResults handler
+                        hands.onResults((results) => {
+                            // Restore the default handler after processing this image
+                            hands.onResults(defaultOnResults);
+                            resolve(results);
+                        });
+                    });
+
+                    // Send the image for hand detection
+                    await hands.send({ image: tempCanvas });
+
+                    // Wait for the detection results
+                    const results = await detectHands;
+
+                    capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+
+                    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                        const landmarks = results.multiHandLandmarks[0];
+
+                        // Calculate bounding box
+                        const xVals = landmarks.map(p => p.x * img.width);
+                        const yVals = landmarks.map(p => p.y * img.height);
+                        const minX = Math.min(...xVals);
+                        const minY = Math.min(...yVals);
+                        const maxX = Math.max(...xVals);
+                        const maxY = Math.max(...yVals);
+
+                        // Square bounding box
+                        const width = maxX - minX;
+                        const height = maxY - minY;
+                        const squareSize = Math.max(width, height) + 35; // Add padding
+
+                        // Center square region
+                        const centerX = (minX + maxX) / 2;
+                        const centerY = (minY + maxY) / 2;
+
+                        const handBox = {
+                            x: Math.max(0, centerX - squareSize / 2),
+                            y: Math.max(0, centerY - squareSize / 2),
+                            size: Math.min(img.width, img.height, squareSize)
+                        };
+
+                        // Crop and resize to 224x224
+                        const scale = Math.min(
+                            capturedCanvas.width / handBox.size,
+                            capturedCanvas.height / handBox.size
+                        );
+                        const newWidth = handBox.size * scale;
+                        const newHeight = handBox.size * scale;
+                        const offsetX = (capturedCanvas.width - newWidth) / 2;
+                        const offsetY = (capturedCanvas.height - newHeight) / 2;
+
+                        capturedCtx.drawImage(
+                            img,
+                            handBox.x, handBox.y, handBox.size, handBox.size,
+                            offsetX, offsetY, newWidth, newHeight
+                        );
+                    } else {
+                        // If no hand is detected, display the whole image scaled to fit
                         const scale = Math.min(capturedCanvas.width / img.width, capturedCanvas.height / img.height);
                         const newWidth = img.width * scale;
                         const newHeight = img.height * scale;
                         const offsetX = (capturedCanvas.width - newWidth) / 2;
                         const offsetY = (capturedCanvas.height - newHeight) / 2;
                         capturedCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-                    };
-                    img.src = e.target.result;
+                        alert("No hand detected in the image. Displaying the full image.");
+                    }
                 };
-                reader.readAsDataURL(file);
-            }
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
-        /** Clear the captured canvas */
         function clearOutput() {
             capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
         }
 
         async function predict() {
-            // Check if capturedCanvas has an image
             const capturedImageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
             const isEmpty = Array.from(capturedImageData.data).every(value => value === 0);
             if (isEmpty) {
-                alert("Please capture an image first.");
+                alert("Please capture or import an image first.");
                 return;
             }
 
-            // Create a temporary canvas for resizing
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = 224;
             tempCanvas.height = 224;
             const tempCtx = tempCanvas.getContext('2d');
 
-            // Draw the captured image onto the temporary canvas, resizing to 224x224
             tempCtx.drawImage(capturedCanvas, 0, 0, 224, 224);
 
-            // Get the image data as a base64 string
             const imageData = tempCanvas.toDataURL('image/jpeg');
 
-            // Send the image to the backend
             try {
                 const response = await fetch('/predict', {
                     method: 'POST',
