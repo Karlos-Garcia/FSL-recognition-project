@@ -9,7 +9,6 @@ from transformers import ViTForImageClassification
 app = Flask(__name__)
 
 # Load the Vision Transformer model and its state dictionary
-#change the num labels later
 model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224', num_labels=33, ignore_mismatched_sizes=True)
 model.load_state_dict(torch.load('model.pth', map_location=torch.device('cpu')))
 model.eval()
@@ -21,7 +20,6 @@ print(model.classifier.bias.shape)    # Should output torch.Size([3])
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-#   transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
