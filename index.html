@@ -7,14 +7,18 @@
     <title>Sign Language Recognition</title>
 </head>
 <body>
-    <h1>Sign Language Recognition</h1>
+    <h1>Filipino Sign Language Recognition</h1>
 
     <div class="canvas-container">
         <!-- Left Side: Video Feed with Landmarks -->
         <canvas id="outputCanvas" width="640" height="480"></canvas>
 
-        <!-- Right Side: Captured Image-->
-        <canvas id="capturedCanvas" width="224" height="224"></canvas>
+        <!-- Right Side: Captured Image -->
+        <div class="captured-container">
+            <canvas id="capturedCanvas" width="224" height="224"></canvas>
+            <div id="predictionOutput"></div>
+            <button id="audioButton" disabled>Play Audio</button>
+        </div>
     </div>
 
     <div class="button-container">
@@ -25,6 +29,305 @@
         <button onclick="predict()">Predict</button>
     </div>
 
+    <audio id="predictionAudio" style="display: none;"></audio>
+
+    <section class="cards-section">
+        <h2>Filipino Sign Language Reference</h2>
+        <div class="cards-container">
+            <!-- 26 letters (A-Z) and 10 numbers (0-9) -->
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">A</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">aso</p>
+                    <p class="example-word">araw</p>
+                </div>
+                <img src="static/images/A.png" alt="Sign A" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">B</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">baboy</p>
+                    <p class="example-word">baka</p>
+                </div>
+                <img src="static/images/B.png" alt="Sign B" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">C</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">chismis</p>
+                    <p class="example-word">cake</p>
+                </div>
+                <img src="static/images/C.png" alt="Sign C" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">D</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">daga</p>
+                    <p class="example-word">damit</p>
+                </div>
+                <img src="static/images/D.png" alt="Sign D" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">E</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">elepante</p>
+                    <p class="example-word">eskwela</p>
+                </div>
+                <img src="static/images/E.png" alt="Sign E" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">F</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">flower</p>
+                    <p class="example-word">fish</p>
+                </div>
+                <img src="static/images/F.png" alt="Sign F" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">G</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">gato</p>
+                    <p class="example-word">ginto</p>
+                </div>
+                <img src="static/images/G.png" alt="Sign G" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">H</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">halaman</p>
+                    <p class="example-word">hayop</p>
+                </div>
+                <img src="static/images/H.png" alt="Sign H" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">I</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">ibon</p>
+                    <p class="example-word">isda</p>
+                </div>
+                <img src="static/images/I.png" alt="Sign I" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">J</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">jeep</p>
+                    <p class="example-word">jacket</p>
+                </div>
+                <img src="static/images/J.png" alt="Sign J" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">K</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">kabayo</p>
+                    <p class="example-word">kahoy</p>
+                </div>
+                <img src="static/images/K.png" alt="Sign K" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">L</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">langit</p>
+                    <p class="example-word">lupa</p>
+                </div>
+                <img src="static/images/L.png" alt="Sign L" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">M</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">manok</p>
+                    <p class="example-word">mangga</p>
+                </div>
+                <img src="static/images/M.png" alt="Sign M" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">N</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">niyog</p>
+                    <p class="example-word">nurse</p>
+                </div>
+                <img src="static/images/N.png" alt="Sign N" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">P</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">pusa</p>
+                    <p class="example-word">papel</p>
+                </div>
+                <img src="static/images/P.png" alt="Sign P" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">Q</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">queen</p>
+                    <p class="example-word">quiz</p>
+                </div>
+                <img src="static/images/Q.png" alt="Sign Q" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">R</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">radyo</p>
+                    <p class="example-word">relo</p>
+                </div>
+                <img src="static/images/R.png" alt="Sign R" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">S</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">sapo</p>
+                    <p class="example-word">susi</p>
+                </div>
+                <img src="static/images/S.png" alt="Sign S" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">T</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">tabla</p>
+                    <p class="example-word">tubo</p>
+                </div>
+                <img src="static/images/T.png" alt="Sign T" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">U</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">ulam</p>
+                    <p class="example-word">upo</p>
+                </div>
+                <img src="static/images/U.png" alt="Sign U" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">X</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">x-ray</p>
+                    <p class="example-word">xylophone</p>
+                </div>
+                <img src="static/images/X.png" alt="Sign X" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">Y</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">yelo</p>
+                    <p class="example-word">yate</p>
+                </div>
+                <img src="static/images/Y.png" alt="Sign Y" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">Z</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">zoo</p>
+                    <p class="example-word">zebra</p>
+                </div>
+                <img src="static/images/Z.png" alt="Sign Z" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">0</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">zero</p>
+                    <p class="example-word">wala</p>
+                </div>
+                <img src="static/images/0.png" alt="Sign 0" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">1</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">isa</p>
+                </div>
+                <img src="static/images/1.png" alt="Sign 1" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">2</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">dalawa</p>
+                </div>
+                <img src="static/images/2.png" alt="Sign 2" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">3</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">tatlo</p>
+                </div>
+                <img src="static/images/3.png" alt="Sign 3" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">4</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">apat</p>
+                </div>
+                <img src="static/images/4.png" alt="Sign 4" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">5</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">lima</p>
+                </div>
+                <img src="static/images/5.png" alt="Sign 5" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">6</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">anim</p>
+                </div>
+                <img src="static/images/6.png" alt="Sign 6" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">7</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">pito</p>
+                </div>
+                <img src="static/images/7.png" alt="Sign 7" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">8</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">walo</p>
+                </div>
+                <img src="static/images/8.png" alt="Sign 8" class="card-image">
+            </div>
+            <div class="card">
+                <div class="left-card">
+                    <span class="card-character">9</span>
+                    <p class="halimbawa">Halimbawa:</p>
+                    <p class="example-word">siyam</p>
+                </div>
+                <img src="static/images/9.png" alt="Sign 9" class="card-image">
+            </div>
+        </div>
+    </section>
+
+    <audio id="predictionAudio" style="display: none;"></audio>
+
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
@@ -34,6 +337,53 @@
         const ctx = canvas.getContext('2d');
         const capturedCanvas = document.getElementById('capturedCanvas');
         const capturedCtx = capturedCanvas.getContext('2d');
+        const predictionOutput = document.getElementById('predictionOutput');
+        const audioButton = document.getElementById('audioButton');
+        const predictionAudio = document.getElementById('predictionAudio');
+
+        // Map predicted classes to audio files
+        const audioMap = {
+            'A': 'static/audio/A.mp3',
+            'B': 'static/audio/B.mp3',
+            'C': 'static/audio/C.mp3',
+            'D': 'static/audio/D.mp3',
+            'E': 'static/audio/E.mp3',
+            'F': 'static/audio/F.mp3',
+            'G': 'static/audio/G.mp3',
+            'H': 'static/audio/H.mp3',
+            'I': 'static/audio/I.mp3',
+            'J': 'static/audio/J.mp3',
+            'K': 'static/audio/K.mp3',
+            'L': 'static/audio/L.mp3',
+            'M': 'static/audio/M.mp3',
+            'N': 'static/audio/N.mp3',
+            'P': 'static/audio/P.mp3',
+            'Q': 'static/audio/Q.mp3',
+            'R': 'static/audio/R.mp3',
+            'S': 'static/audio/S.mp3',
+            'T': 'static/audio/T.mp3',
+            'U': 'static/audio/U.mp3',
+            'X': 'static/audio/X.mp3',
+            'Y': 'static/audio/Y.mp3',
+            'Z': 'static/audio/Z.mp3',
+            '0': 'static/audio/0.mp3',
+            '1': 'static/audio/1.mp3',
+            '2': 'static/audio/2.mp3',
+            '3': 'static/audio/3.mp3',
+            '4': 'static/audio/4.mp3',
+            '5': 'static/audio/5.mp3',
+            '6': 'static/audio/6.mp3',
+            '7': 'static/audio/7.mp3',
+            '8': 'static/audio/8.mp3',
+            '9': 'static/audio/9.mp3'
+        };
+
+        // Event listener for audio button
+        audioButton.addEventListener('click', () => {
+            if (!audioButton.disabled) {
+                predictionAudio.play();
+            }
+        });
 
         const video = document.createElement('video');  
         video.setAttribute("autoplay", "");
@@ -52,18 +402,19 @@
 
         let lastHandBox = null;
 
-        hands.onResults((results) => {
+        // Default onResults handler for video stream
+        const defaultOnResults = (results) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
 
-                //landmarks
+                // Draw landmarks
                 drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
                 drawLandmarks(ctx, landmarks, { color: '#FF0000', lineWidth: 2 });
 
-                //bounding box
+                // Calculate bounding box
                 const xVals = landmarks.map(p => p.x * canvas.width);
                 const yVals = landmarks.map(p => p.y * canvas.height);
                 const minX = Math.min(...xVals);
@@ -71,12 +422,12 @@
                 const maxX = Math.max(...xVals);
                 const maxY = Math.max(...yVals);
 
-                // Square Bounding Box
+                // Square bounding box
                 const width = maxX - minX;
                 const height = maxY - minY;
                 const squareSize = Math.max(width, height) + 35; // Add padding
 
-                // Center square region for bounding
+                // Center square region
                 const centerX = (minX + maxX) / 2;
                 const centerY = (minY + maxY) / 2;
 
@@ -90,7 +441,9 @@
                 ctx.lineWidth = 3;
                 ctx.strokeRect(lastHandBox.x, lastHandBox.y, lastHandBox.size, lastHandBox.size);
             }
-        });
+        };
+
+        hands.onResults(defaultOnResults);
 
         async function startCamera() {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -108,7 +461,16 @@
         }
 
         function captureHand() {
-            if (!lastHandBox) return;
+            if (!lastHandBox) {
+                predictionOutput.textContent = "No hand detected to capture.";
+                predictionOutput.classList.add('error');
+                audioButton.disabled = true;
+                return;
+            }
+
+            predictionOutput.textContent = ''; // Clear previous messages
+            predictionOutput.classList.remove('error');
+            audioButton.disabled = true;
 
             const squareSize = lastHandBox.size;
             const sourceX = Math.max(0, lastHandBox.x);
@@ -125,63 +487,140 @@
             const offsetX = (capturedCanvas.width - newWidth) / 2;
             const offsetY = (capturedCanvas.height - newHeight) / 2;
 
-            // Draw from the video element instead of the canvas
             capturedCtx.drawImage(
-                video, // Changed from 'canvas' to 'video'
+                video,
                 sourceX, sourceY, squareSize, squareSize,
                 offsetX, offsetY, newWidth, newHeight
             );
         }
 
-        /** Import an image from file and display it on capturedCanvas */
-        function importImage(event) {
+        async function importImage(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+            if (!file) return;
+
+            predictionOutput.textContent = ''; // Clear previous messages
+            predictionOutput.classList.remove('error');
+            audioButton.disabled = true;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const img = new Image();
+                img.onload = async function() {
+                    // Create a temporary canvas to process the image
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = img.width;
+                    tempCanvas.height = img.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(img, 0, 0, img.width, img.height);
+
+                    // Create a promise to handle the hand detection results
+                    const detectHands = new Promise((resolve) => {
+                        // Temporarily override the onResults handler
+                        hands.onResults((results) => {
+                            // Restore the default handler after processing this image
+                            hands.onResults(defaultOnResults);
+                            resolve(results);
+                        });
+                    });
+
+                    // Send the image for hand detection
+                    await hands.send({ image: tempCanvas });
+
+                    // Wait for the detection results
+                    const results = await detectHands;
+
+                    capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+
+                    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                        const landmarks = results.multiHandLandmarks[0];
+
+                        // Calculate bounding box
+                        const xVals = landmarks.map(p => p.x * img.width);
+                        const yVals = landmarks.map(p => p.y * img.height);
+                        const minX = Math.min(...xVals);
+                        const minY = Math.min(...yVals);
+                        const maxX = Math.max(...xVals);
+                        const maxY = Math.max(...yVals);
+
+                        // Square bounding box
+                        const width = maxX - minX;
+                        const height = maxY - minY;
+                        const squareSize = Math.max(width, height) + 35; // Add padding
+
+                        // Center square region
+                        const centerX = (minX + maxX) / 2;
+                        const centerY = (minY + maxY) / 2;
+
+                        const handBox = {
+                            x: Math.max(0, centerX - squareSize / 2),
+                            y: Math.max(0, centerY - squareSize / 2),
+                            size: Math.min(img.width, img.height, squareSize)
+                        };
+
+                        // Crop and resize to 224x224
+                        const scale = Math.min(
+                            capturedCanvas.width / handBox.size,
+                            capturedCanvas.height / handBox.size
+                        );
+                        const newWidth = handBox.size * scale;
+                        const newHeight = handBox.size * scale;
+                        const offsetX = (capturedCanvas.width - newWidth) / 2;
+                        const offsetY = (capturedCanvas.height - newHeight) / 2;
+
+                        capturedCtx.drawImage(
+                            img,
+                            handBox.x, handBox.y, handBox.size, handBox.size,
+                            offsetX, offsetY, newWidth, newHeight
+                        );
+                    } else {
+                        // If no hand is detected, display the whole image scaled to fit
                         const scale = Math.min(capturedCanvas.width / img.width, capturedCanvas.height / img.height);
                         const newWidth = img.width * scale;
                         const newHeight = img.height * scale;
                         const offsetX = (capturedCanvas.width - newWidth) / 2;
                         const offsetY = (capturedCanvas.height - newHeight) / 2;
                         capturedCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-                    };
-                    img.src = e.target.result;
+                        predictionOutput.textContent = "No hand detected in the image. Displaying the full image.";
+                        predictionOutput.classList.add('error');
+                        audioButton.disabled = true;
+                    }
                 };
-                reader.readAsDataURL(file);
-            }
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
-        /** Clear the captured canvas */
         function clearOutput() {
             capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+            predictionOutput.textContent = '';
+            predictionOutput.classList.remove('error');
+            audioButton.disabled = true;
+            predictionAudio.src = ''; // Clear audio source
         }
 
         async function predict() {
-            // Check if capturedCanvas has an image
             const capturedImageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
             const isEmpty = Array.from(capturedImageData.data).every(value => value === 0);
             if (isEmpty) {
-                alert("Please capture an image first.");
+                predictionOutput.textContent = "Please capture or import an image first.";
+                predictionOutput.classList.add('error');
+                audioButton.disabled = true;
                 return;
             }
 
-            // Create a temporary canvas for resizing
+            predictionOutput.textContent = ''; // Clear previous messages
+            predictionOutput.classList.remove('error');
+            audioButton.disabled = true;
+
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = 224;
             tempCanvas.height = 224;
             const tempCtx = tempCanvas.getContext('2d');
 
-            // Draw the captured image onto the temporary canvas, resizing to 224x224
             tempCtx.drawImage(capturedCanvas, 0, 0, 224, 224);
 
-            // Get the image data as a base64 string
             const imageData = tempCanvas.toDataURL('image/jpeg');
 
-            // Send the image to the backend
             try {
                 const response = await fetch('/predict', {
                     method: 'POST',
@@ -196,10 +635,22 @@
                 }
 
                 const data = await response.json();
-                alert(`Predicted class: ${data.predicted_class}`);
+                predictionOutput.textContent = `Predicted class: ${data.predicted_class}`;
+
+                // Load audio based on predicted class
+                const audioFile = audioMap[data.predicted_class];
+                if (audioFile) {
+                    predictionAudio.src = audioFile;
+                    audioButton.disabled = false; // Enable audio button
+                } else {
+                    predictionOutput.textContent += ' (No audio available)';
+                    audioButton.disabled = true;
+                }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Prediction failed. Please try again.');
+                predictionOutput.textContent = 'Prediction failed. Please try again.';
+                predictionOutput.classList.add('error');
+                audioButton.disabled = true;
             }
         }
 
