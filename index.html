@@ -329,332 +329,402 @@
     <audio id="predictionAudio" style="display: none;"></audio>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
 
-    <script>
-        const canvas = document.getElementById('outputCanvas');
-        const ctx = canvas.getContext('2d');
-        const capturedCanvas = document.getElementById('capturedCanvas');
-        const capturedCtx = capturedCanvas.getContext('2d');
-        const predictionOutput = document.getElementById('predictionOutput');
-        const audioButton = document.getElementById('audioButton');
-        const predictionAudio = document.getElementById('predictionAudio');
+<script>
+    const canvas = document.getElementById('outputCanvas');
+    const ctx = canvas.getContext('2d');
+    const capturedCanvas = document.getElementById('capturedCanvas');
+    const capturedCtx = capturedCanvas.getContext('2d');
+    const predictionOutput = document.getElementById('predictionOutput');
+    const audioButton = document.getElementById('audioButton');
+    const predictionAudio = document.getElementById('predictionAudio');
 
-        // Map predicted classes to audio files
-        const audioMap = {
-            'A': 'static/audio/A.mp3',
-            'B': 'static/audio/B.mp3',
-            'C': 'static/audio/C.mp3',
-            'D': 'static/audio/D.mp3',
-            'E': 'static/audio/E.mp3',
-            'F': 'static/audio/F.mp3',
-            'G': 'static/audio/G.mp3',
-            'H': 'static/audio/H.mp3',
-            'I': 'static/audio/I.mp3',
-            'J': 'static/audio/J.mp3',
-            'K': 'static/audio/K.mp3',
-            'L': 'static/audio/L.mp3',
-            'M': 'static/audio/M.mp3',
-            'N': 'static/audio/N.mp3',
-            'P': 'static/audio/P.mp3',
-            'Q': 'static/audio/Q.mp3',
-            'R': 'static/audio/R.mp3',
-            'S': 'static/audio/S.mp3',
-            'T': 'static/audio/T.mp3',
-            'U': 'static/audio/U.mp3',
-            'X': 'static/audio/X.mp3',
-            'Y': 'static/audio/Y.mp3',
-            'Z': 'static/audio/Z.mp3',
-            '0': 'static/audio/0.mp3',
-            '1': 'static/audio/1.mp3',
-            '2': 'static/audio/2.mp3',
-            '3': 'static/audio/3.mp3',
-            '4': 'static/audio/4.mp3',
-            '5': 'static/audio/5.mp3',
-            '6': 'static/audio/6.mp3',
-            '7': 'static/audio/7.mp3',
-            '8': 'static/audio/8.mp3',
-            '9': 'static/audio/9.mp3'
-        };
+    // Map predicted classes to audio files
+    const audioMap = {
+        'A': 'static/audio/A.mp3',
+        'B': 'static/audio/B.mp3',
+        'C': 'static/audio/C.mp3',
+        'D': 'static/audio/D.mp3',
+        'E': 'static/audio/E.mp3',
+        'F': 'static/audio/F.mp3',
+        'G': 'static/audio/G.mp3',
+        'H': 'static/audio/H.mp3',
+        'I': 'static/audio/I.mp3',
+        'J': 'static/audio/J.mp3',
+        'K': 'static/audio/K.mp3',
+        'L': 'static/audio/L.mp3',
+        'M': 'static/audio/M.mp3',
+        'N': 'static/audio/N.mp3',
+        'P': 'static/audio/P.mp3',
+        'Q': 'static/audio/Q.mp3',
+        'R': 'static/audio/R.mp3',
+        'S': 'static/audio/S.mp3',
+        'T': 'static/audio/T.mp3',
+        'U': 'static/audio/U.mp3',
+        'X': 'static/audio/X.mp3',
+        'Y': 'static/audio/Y.mp3',
+        'Z': 'static/audio/Z.mp3',
+        '0': 'static/audio/0.mp3',
+        '1': 'static/audio/1.mp3',
+        '2': 'static/audio/2.mp3',
+        '3': 'static/audio/3.mp3',
+        '4': 'static/audio/4.mp3',
+        '5': 'static/audio/5.mp3',
+        '6': 'static/audio/6.mp3',
+        '7': 'static/audio/7.mp3',
+        '8': 'static/audio/8.mp3',
+        '9': 'static/audio/9.mp3'
+    };
 
-        // Event listener for audio button
-        audioButton.addEventListener('click', () => {
-            if (!audioButton.disabled) {
-                predictionAudio.play();
-            }
-        });
-
-        const video = document.createElement('video');  
-        video.setAttribute("autoplay", "");
-        video.setAttribute("playsinline", "");
-
-        const hands = new Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
-
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-
-        let lastHandBox = null;
-
-        // Default onResults handler for video stream
-        const defaultOnResults = (results) => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-
-                // Draw landmarks
-                drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
-                drawLandmarks(ctx, landmarks, { color: '#FF0000', lineWidth: 2 });
-
-                // Calculate bounding box
-                const xVals = landmarks.map(p => p.x * canvas.width);
-                const yVals = landmarks.map(p => p.y * canvas.height);
-                const minX = Math.min(...xVals);
-                const minY = Math.min(...yVals);
-                const maxX = Math.max(...xVals);
-                const maxY = Math.max(...yVals);
-
-                // Square bounding box
-                const width = maxX - minX;
-                const height = maxY - minY;
-                const squareSize = Math.max(width, height) + 35; // Add padding
-
-                // Center square region
-                const centerX = (minX + maxX) / 2;
-                const centerY = (minY + maxY) / 2;
-
-                lastHandBox = {
-                    x: Math.max(0, centerX - squareSize / 2),
-                    y: Math.max(0, centerY - squareSize / 2),
-                    size: Math.min(canvas.width, canvas.height, squareSize)
-                };
-
-                ctx.strokeStyle = "blue";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(lastHandBox.x, lastHandBox.y, lastHandBox.size, lastHandBox.size);
-            }
-        };
-
-        hands.onResults(defaultOnResults);
-
-        async function startCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-
-            const camera = new Camera(video, {
-                onFrame: async () => {
-                    await hands.send({ image: video });
-                },
-                width: 640,
-                height: 480
+    // Event listener for audio button
+    audioButton.addEventListener('click', () => {
+        if (!audioButton.disabled) {
+            predictionAudio.play().catch(err => {
+                console.error('Audio playback failed:', err);
+                predictionOutput.innerHTML = "<span class='warning'>Audio playback failed. Please try again.</span>";
             });
+        }
+    });
 
-            camera.start();
+    const video = document.createElement('video');  
+    video.setAttribute('autoplay', '');
+    video.setAttribute('playsinline', '');
+
+    const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    let lastHandBox = null;
+
+    // Default onResults handler for video stream
+    const defaultOnResults = (results) => {
+        if (!ctx) {
+            console.error('Canvas context (ctx) is not initialized');
+            predictionOutput.innerHTML = "<span class='warning'>Canvas context error. Please refresh the page.</span>";
+            return;
         }
 
-        function captureHand() {
-            if (!lastHandBox) {
-                predictionOutput.textContent = "No hand detected to capture.";
-                predictionOutput.classList.add('error');
-                audioButton.disabled = true;
-                return;
-            }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            predictionOutput.textContent = ''; // Clear previous messages
-            predictionOutput.classList.remove('error');
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const landmarks = results.multiHandLandmarks[0];
+
+            // Draw landmarks
+            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
+            drawLandmarks(ctx, landmarks, { color: '#FF0000', lineWidth: 2 });
+
+            // Calculate bounding box
+            const xVals = landmarks.map(p => p.x * canvas.width);
+            const yVals = landmarks.map(p => p.y * canvas.height);
+            const minX = Math.min(...xVals);
+            const minY = Math.min(...yVals);
+            const maxX = Math.max(...xVals);
+            const maxY = Math.max(...yVals);
+
+            // Square bounding box
+            const width = maxX - minX;
+            const height = maxY - minY;
+            const squareSize = Math.max(width, height) + 35; // Add padding
+
+            // Center square region
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+
+            lastHandBox = {
+                x: Math.max(0, centerX - squareSize / 2),
+                y: Math.max(0, centerY - squareSize / 2),
+                size: Math.min(canvas.width, canvas.height, squareSize)
+            };
+
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(lastHandBox.x, lastHandBox.y, lastHandBox.size, lastHandBox.size);
+        } else {
+            lastHandBox = null; // Reset if no hand is detected
+        }
+    };
+
+    hands.onResults(defaultOnResults);
+
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play().catch(err => {
+                    console.error('Video playback failed:', err);
+                    predictionOutput.innerHTML = "<span class='warning'>Failed to start video. Please check camera permissions.</span>";
+                });
+
+                const camera = new Camera(video, {
+                    onFrame: async () => {
+                        try {
+                            await hands.send({ image: video });
+                        } catch (err) {
+                            console.error('MediaPipe hands.send failed:', err);
+                            predictionOutput.innerHTML = "<span class='warning'>Hand detection failed. Please try again.</span>";
+                        }
+                    },
+                    width: 640,
+                    height: 480
+                });
+
+                camera.start();
+            };
+        } catch (err) {
+            console.error('Camera access failed:', err);
+            predictionOutput.innerHTML = "<span class='warning'>Camera access denied. Please allow camera permissions and refresh.</span>";
+        }
+    }
+
+    function captureHand() {
+        if (!lastHandBox) {
+            predictionOutput.innerHTML = "<span class='warning'>No hand detected to capture.</span>";
             audioButton.disabled = true;
+            return;
+        }
 
-            const squareSize = lastHandBox.size;
-            const sourceX = Math.max(0, lastHandBox.x);
-            const sourceY = Math.max(0, lastHandBox.y);
+        if (!capturedCtx) {
+            console.error('Captured canvas context (capturedCtx) is not initialized');
+            predictionOutput.innerHTML = "<span class='warning'>Canvas context error. Please refresh the page.</span>";
+            return;
+        }
 
-            capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+        predictionOutput.innerHTML = ''; // Clear previous messages
+        audioButton.disabled = true;
 
-            const scale = Math.min(
-                capturedCanvas.width / squareSize,
-                capturedCanvas.height / squareSize
-            );
-            const newWidth = squareSize * scale;
-            const newHeight = squareSize * scale;
-            const offsetX = (capturedCanvas.width - newWidth) / 2;
-            const offsetY = (capturedCanvas.height - newHeight) / 2;
+        const squareSize = lastHandBox.size;
+        const sourceX = Math.max(0, lastHandBox.x);
+        const sourceY = Math.max(0, lastHandBox.y);
 
+        capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+
+        const scale = Math.min(
+            capturedCanvas.width / squareSize,
+            capturedCanvas.height / squareSize
+        );
+        const newWidth = squareSize * scale;
+        const newHeight = squareSize * scale;
+        const offsetX = (capturedCanvas.width - newWidth) / 2;
+        const offsetY = (capturedCanvas.height - newHeight) / 2;
+
+        try {
             capturedCtx.drawImage(
                 video,
                 sourceX, sourceY, squareSize, squareSize,
                 offsetX, offsetY, newWidth, newHeight
             );
+        } catch (err) {
+            console.error('Failed to draw captured image:', err);
+            predictionOutput.innerHTML = "<span class='warning'>Failed to capture image. Please try again.</span>";
         }
+    }
 
-        async function importImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+    async function importImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-            predictionOutput.textContent = ''; // Clear previous messages
-            predictionOutput.classList.remove('error');
-            audioButton.disabled = true;
+        predictionOutput.innerHTML = ''; // Clear previous messages
+        audioButton.disabled = true;
 
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const img = new Image();
-                img.onload = async function() {
-                    // Create a temporary canvas to process the image
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = img.width;
-                    tempCanvas.height = img.height;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    tempCtx.drawImage(img, 0, 0, img.width, img.height);
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const img = new Image();
+            img.onload = async function() {
+                // Create a temporary canvas to process the image
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                if (!tempCtx) {
+                    console.error('Temporary canvas context (tempCtx) is not initialized');
+                    predictionOutput.innerHTML = "<span class='warning'>Canvas context error. Please refresh the page.</span>";
+                    return;
+                }
+                tempCtx.drawImage(img, 0, 0, img.width, img.height);
 
-                    // Create a promise to handle the hand detection results
-                    const detectHands = new Promise((resolve) => {
-                        // Temporarily override the onResults handler
-                        hands.onResults((results) => {
-                            // Restore the default handler after processing this image
-                            hands.onResults(defaultOnResults);
-                            resolve(results);
-                        });
+                // Create a promise to handle the hand detection results
+                const detectHands = new Promise((resolve) => {
+                    hands.onResults((results) => {
+                        hands.onResults(defaultOnResults);
+                        resolve(results);
                     });
+                });
 
-                    // Send the image for hand detection
+                // Send the image for hand detection
+                try {
                     await hands.send({ image: tempCanvas });
+                } catch (err) {
+                    console.error('MediaPipe hands.send failed for imported image:', err);
+                    predictionOutput.innerHTML = "<span class='warning'>Hand detection failed for imported image. Please try again.</span>";
+                    return;
+                }
 
-                    // Wait for the detection results
-                    const results = await detectHands;
+                // Wait for the detection results
+                const results = await detectHands;
 
-                    capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+                capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
 
-                    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                        const landmarks = results.multiHandLandmarks[0];
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    const landmarks = results.multiHandLandmarks[0];
 
-                        // Calculate bounding box
-                        const xVals = landmarks.map(p => p.x * img.width);
-                        const yVals = landmarks.map(p => p.y * img.height);
-                        const minX = Math.min(...xVals);
-                        const minY = Math.min(...yVals);
-                        const maxX = Math.max(...xVals);
-                        const maxY = Math.max(...yVals);
+                    // Calculate bounding box
+                    const xVals = landmarks.map(p => p.x * img.width);
+                    const yVals = landmarks.map(p => p.y * img.height);
+                    const minX = Math.min(...xVals);
+                    const minY = Math.min(...yVals);
+                    const maxX = Math.max(...xVals);
+                    const maxY = Math.max(...yVals);
 
-                        // Square bounding box
-                        const width = maxX - minX;
-                        const height = maxY - minY;
-                        const squareSize = Math.max(width, height) + 35; // Add padding
+                    // Square bounding box
+                    const width = maxX - minX;
+                    const height = maxY - minY;
+                    const squareSize = Math.max(width, height) + 35; // Add padding
 
-                        // Center square region
-                        const centerX = (minX + maxX) / 2;
-                        const centerY = (minY + maxY) / 2;
+                    // Center square region
+                    const centerX = (minX + maxX) / 2;
+                    const centerY = (minY + maxY) / 2;
 
-                        const handBox = {
-                            x: Math.max(0, centerX - squareSize / 2),
-                            y: Math.max(0, centerY - squareSize / 2),
-                            size: Math.min(img.width, img.height, squareSize)
-                        };
+                    const handBox = {
+                        x: Math.max(0, centerX - squareSize / 2),
+                        y: Math.max(0, centerY - squareSize / 2),
+                        size: Math.min(img.width, img.height, squareSize)
+                    };
 
-                        // Crop and resize to 224x224
-                        const scale = Math.min(
-                            capturedCanvas.width / handBox.size,
-                            capturedCanvas.height / handBox.size
-                        );
-                        const newWidth = handBox.size * scale;
-                        const newHeight = handBox.size * scale;
-                        const offsetX = (capturedCanvas.width - newWidth) / 2;
-                        const offsetY = (capturedCanvas.height - newHeight) / 2;
+                    // Crop and resize to 224x224
+                    const scale = Math.min(
+                        capturedCanvas.width / handBox.size,
+                        capturedCanvas.height / handBox.size
+                    );
+                    const newWidth = handBox.size * scale;
+                    const newHeight = handBox.size * scale;
+                    const offsetX = (capturedCanvas.width - newWidth) / 2;
+                    const offsetY = (capturedCanvas.height - newHeight) / 2;
 
+                    try {
                         capturedCtx.drawImage(
                             img,
                             handBox.x, handBox.y, handBox.size, handBox.size,
                             offsetX, offsetY, newWidth, newHeight
                         );
-                    } else {
-                        // If no hand is detected, display the whole image scaled to fit
-                        const scale = Math.min(capturedCanvas.width / img.width, capturedCanvas.height / img.height);
-                        const newWidth = img.width * scale;
-                        const newHeight = img.height * scale;
-                        const offsetX = (capturedCanvas.width - newWidth) / 2;
-                        const offsetY = (capturedCanvas.height - newHeight) / 2;
-                        capturedCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-                        predictionOutput.textContent = "No hand detected in the image. Displaying the full image.";
-                        predictionOutput.classList.add('error');
-                        audioButton.disabled = true;
+                    } catch (err) {
+                        console.error('Failed to draw imported image:', err);
+                        predictionOutput.innerHTML = "<span class='warning'>Failed to process imported image. Please try again.</span>";
                     }
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function clearOutput() {
-            capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
-            predictionOutput.textContent = '';
-            predictionOutput.classList.remove('error');
-            audioButton.disabled = true;
-            predictionAudio.src = ''; // Clear audio source
-        }
-
-        async function predict() {
-            const capturedImageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
-            const isEmpty = Array.from(capturedImageData.data).every(value => value === 0);
-            if (isEmpty) {
-                predictionOutput.textContent = "Please capture or import an image first.";
-                predictionOutput.classList.add('error');
-                audioButton.disabled = true;
-                return;
-            }
-
-            predictionOutput.textContent = ''; // Clear previous messages
-            predictionOutput.classList.remove('error');
-            audioButton.disabled = true;
-
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = 224;
-            tempCanvas.height = 224;
-            const tempCtx = tempCanvas.getContext('2d');
-
-            tempCtx.drawImage(capturedCanvas, 0, 0, 224, 224);
-
-            const imageData = tempCanvas.toDataURL('image/jpeg');
-
-            try {
-                const response = await fetch('/predict', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ image: imageData })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Prediction failed');
-                }
-
-                const data = await response.json();
-                predictionOutput.textContent = `Predicted class: ${data.predicted_class}`;
-
-                // Load audio based on predicted class
-                const audioFile = audioMap[data.predicted_class];
-                if (audioFile) {
-                    predictionAudio.src = audioFile;
-                    audioButton.disabled = false; // Enable audio button
                 } else {
-                    predictionOutput.textContent += ' (No audio available)';
+                    // If no hand is detected, display the whole image scaled to fit
+                    const scale = Math.min(capturedCanvas.width / img.width, capturedCanvas.height / img.height);
+                    const newWidth = img.width * scale;
+                    const newHeight = img.height * scale;
+                    const offsetX = (capturedCanvas.width - newWidth) / 2;
+                    const offsetY = (capturedCanvas.height - newHeight) / 2;
+                    capturedCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+                    predictionOutput.innerHTML = "<span class='warning'>No hand detected in the image. Displaying the full image.</span>";
                     audioButton.disabled = true;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                predictionOutput.textContent = 'Prediction failed. Please try again.';
-                predictionOutput.classList.add('error');
-                audioButton.disabled = true;
-            }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearOutput() {
+        capturedCtx.clearRect(0, 0, capturedCanvas.width, capturedCanvas.height);
+        predictionOutput.innerHTML = '';
+        audioButton.disabled = true;
+        predictionAudio.src = ''; // Clear audio source
+    }
+
+    async function predict() {
+        const capturedImageData = capturedCtx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
+        const isEmpty = Array.from(capturedImageData.data).every(value => value === 0);
+        if (isEmpty) {
+            predictionOutput.innerHTML = "<span class='warning'>Please capture or import an image first.</span>";
+            audioButton.disabled = true;
+            return;
         }
 
-        startCamera();
-    </script>
+        predictionOutput.innerHTML = ''; // Clear previous messages
+        audioButton.disabled = true;
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 224;
+        tempCanvas.height = 224;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (!tempCtx) {
+            console.error('Temporary canvas context (tempCtx) for prediction is not initialized');
+            predictionOutput.innerHTML = "<span class='warning'>Canvas context error. Please refresh the page.</span>";
+            return;
+        }
+
+        try {
+            tempCtx.drawImage(capturedCanvas, 0, 0, 224, 224);
+        } catch (err) {
+            console.error('Failed to draw image for prediction:', err);
+            predictionOutput.innerHTML = "<span class='warning'>Failed to prepare image for prediction. Please try again.</span>";
+            return;
+        }
+
+        const imageData = tempCanvas.toDataURL('image/jpeg');
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: imageData })
+            });
+
+            if (!response.ok) {
+                throw new Error('Prediction failed');
+            }
+
+            const data = await response.json();
+            
+            // Create HTML for prediction output
+            let outputHTML = `<div class="prediction">Predicted class: ${data.predicted_class} (${data.confidence.toFixed(2)}%)</div>`;
+            outputHTML += '<div class="top-predictions">Confidence Values:<ul>';
+            data.top_predictions.forEach((pred, index) => {
+                outputHTML += `<li>${pred.class} (${pred.confidence.toFixed(2)}%)</li>`;
+            });
+            outputHTML += '</ul></div>';
+            
+            // Add warning if present
+            if (data.warning) {
+                outputHTML += `<div class="warning">${data.warning}</div>`;
+            }
+
+            predictionOutput.innerHTML = outputHTML;
+
+            // Load audio based on predicted class
+            const audioFile = audioMap[data.predicted_class];
+            if (audioFile) {
+                predictionAudio.src = audioFile;
+                audioButton.disabled = false; // Enable audio button
+            } else {
+                predictionOutput.innerHTML += '<div class="warning">(No audio available)</div>';
+                audioButton.disabled = true;
+            }
+        } catch (error) {
+            console.error('Prediction error:', error);
+            predictionOutput.innerHTML = "<span class='warning'>Prediction failed. Please try again.</span>";
+            audioButton.disabled = true;
+        }
+    }
+
+    // Start the camera when the page loads
+    startCamera();
+</script>
 </body>
 </html>

@@ -122,3 +122,39 @@ button {
     margin: 2px 0;
     color: #333;
 }
+
+/* Ensure prediction output text is black and vertically aligned */
+#predictionOutput {
+    font-size: 16px;
+    color: black;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+/* Style for the predicted class */
+.prediction {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Style for the top predictions list */
+.top-predictions {
+    margin-bottom: 10px;
+}
+
+.top-predictions ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.top-predictions li {
+    margin-bottom: 5px;
+}
+
+/* Style for warnings */
+.warning {
+    color: black;
+    font-style: italic;
+    margin-top: 10px;
+}
