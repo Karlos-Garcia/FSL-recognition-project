@@ -13,9 +13,6 @@ model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224',
 model.load_state_dict(torch.load('model.pth', map_location=torch.device('cpu')))
 model.eval()
 
-print(model.classifier.weight.shape)  # Should output torch.Size([3, 768])
-print(model.classifier.bias.shape)    # Should output torch.Size([3])
-
 # Define image transformations for the ViT model
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
@@ -43,12 +40,35 @@ def predict():
     # Make prediction
     with torch.no_grad():
         output = model(image)
-        logits = output.logits  # Access logits from the model's output
-        prediction = logits.argmax(dim=1).item()
+        logits = output.logits  # Shape: (1, 33)
+        probabilities = torch.softmax(logits, dim=1)  # Convert logits to probabilities
+        top_probs, top_indices = torch.topk(probabilities, k=3, dim=1)  # Get top 3
+        
+        # Convert to lists for JSON serialization
+        top_probs = top_probs[0].cpu().numpy().tolist()
+        top_indices = top_indices[0].cpu().numpy().tolist()
+        
+        # Map indices to class names
+        predicted_class = class_names[top_indices[0]]
+        top_predictions = [
+            {'class': class_names[idx], 'confidence': prob * 100}
+            for idx, prob in zip(top_indices, top_probs)
+        ]
     
-    # Map prediction to class name
-    predicted_class = class_names[prediction]
-    return jsonify({'predicted_class': predicted_class})
+    # Prepare response
+    response = {
+        'predicted_class': predicted_class,
+        'confidence': top_probs[0] * 100,
+        'top_predictions': top_predictions
+    }
+    
+    # Check for edge cases
+    if top_probs[0] < 0.5:
+        response['warning'] = 'Low confidence prediction (<50%). Consider rechecking the input.'
+    if len(top_probs) > 1 and (top_probs[0] - top_probs[1]) < 0.05:
+        response['warning'] = response.get('warning', '') + ' Top two classes have similar confidence scores.'
+    
+    return jsonify(response)
 
 # Serve the HTML file
 @app.route('/')
