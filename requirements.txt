@@ -1,6 +1,7 @@
 flask
+gunicorn
+pillow
 torch
 torchvision
 transformers
-pillow
-gunicorn
+
