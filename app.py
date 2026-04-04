@@ -8,19 +8,17 @@ from transformers import ViTForImageClassification
 
 app = Flask(__name__)
 
-# Global variable - model will be loaded on first prediction
+# Model is loaded only when needed (lazy loading)
 model = None
 transform = None
+
+class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'X', 'Y', 'Z']
 
 def load_model():
     global model, transform
     if model is None:
-        print("Loading ViT model for the first time...")
-        model = ViTForImageClassification.from_pretrained(
-            'google/vit-base-patch16-224', 
-            num_labels=33, 
-            ignore_mismatched_sizes=True
-        )
+        print("Loading model... This may take 20-40 seconds the first time.")
+        model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224', num_labels=33, ignore_mismatched_sizes=True)
         model.load_state_dict(torch.load('model.pth', map_location=torch.device('cpu')))
         model.eval()
         
@@ -32,16 +30,15 @@ def load_model():
         print("Model loaded successfully!")
     return model, transform
 
-# Serve the HTML file - this should be fast now
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
 
-# Prediction endpoint
+
 @app.route('/predict', methods=['POST'])
 def predict():
-    global model, transform
-    model, transform = load_model()   # Load only on first prediction
+    model, transform = load_model()   # Load model only when predicting
     
     try:
         data = request.json
@@ -50,7 +47,6 @@ def predict():
     except Exception as e:
         return jsonify({'error': 'Image decoding failed', 'details': str(e)}), 400
     
-    # Apply transformations
     image = transform(image).unsqueeze(0)
     
     with torch.no_grad():
@@ -81,8 +77,6 @@ def predict():
     
     return jsonify(response)
 
-# Define class names
-class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'X', 'Y', 'Z']
 
 if __name__ == '__main__':
     pass
