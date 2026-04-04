@@ -6,6 +6,8 @@ import torch
 from torchvision import transforms
 from transformers import ViTForImageClassification
 
+torch.set_num_threads(4)
+
 app = Flask(__name__)
 
 # Load the Vision Transformer model and its state dictionary

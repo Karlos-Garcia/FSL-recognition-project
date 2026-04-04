@@ -27,4 +27,4 @@ COPY static ./static
 EXPOSE 5000
 
 # Use Gunicorn for production (better than Flask's debug server)
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--timeout", "300", "--preload", "app:app"]
